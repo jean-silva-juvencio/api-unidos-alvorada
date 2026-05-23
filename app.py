@@ -206,5 +206,39 @@ def atualizar_status(protocolo):
         print(f"Erro: {e}")
         return jsonify({'erro': 'Erro ao atualizar status'}), 500
 
+# ==============================================
+# 🗑️ NOVA ROTA PARA EXCLUIR ALUNO DO BANCO
+# ==============================================
+@app.route('/api/aluno/<protocolo>', methods=['DELETE'])
+def deletar_aluno(protocolo):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        # Verificar se o aluno existe
+        cursor.execute("SELECT * FROM alunos WHERE protocolo = %s", (protocolo,))
+        aluno = cursor.fetchone()
+        
+        if not aluno:
+            cursor.close()
+            conn.close()
+            return jsonify({'erro': 'Aluno não encontrado'}), 404
+        
+        # Excluir o aluno
+        cursor.execute("DELETE FROM alunos WHERE protocolo = %s", (protocolo,))
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        
+        print(f"🗑️ Aluno excluído! Protocolo: {protocolo}, Nome: {aluno.get('nome_aluno')}")
+        return jsonify({'mensagem': 'Aluno excluído com sucesso!'}), 200
+        
+    except Exception as e:
+        print(f"❌ Erro ao excluir: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'erro': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
